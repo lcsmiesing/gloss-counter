@@ -26,6 +26,31 @@ input e gstate = return (inputKey e gstate)
 
 inputKey :: Event -> GameState -> GameState
 inputKey (EventKey (Char c) _ _ _) gstate
-  = -- If the user presses a character key, show that one
-    gstate { infoToShow = ShowAChar c }
+  = case c of
+      'w' -> --iets jwz
+      'a' ->
+      's' ->
+      'd' ->
+
+inputKey (EventKey (MouseButton LeftButton) Down MousePos)
+  = gstate@(GameState {player, bullets}) = gstate {bullets = bullets:newBullet}
+    where
+      newBullet = Bullet {velb = bulletVel posb, posb = player@posp, fromEnemy = False}
+      bulletVel p =  norm (p .- MousePos) .* 10
+      posb = --SDFHSDFSDKLFSLDJFLKSDJFSLKDJFSLKDFSDLKJF
 inputKey _ gstate = gstate -- Otherwise keep the same
+
+.+ :: Point -> Point -> Point
+.+ (Point x y) (Point a b) = Point (x+a) (y+b)
+
+.- :: Point -> Point -> Point
+.- (Point x y) (Point a b) = Point (x-a) (y-b)
+
+.* :: Vector -> Float -> Vector
+.* (Vector x y) s = Vector (s*x) (s*y)
+
+norm :: Vector -> Vector
+norm v@(Vector x y) = let m = magn v in (Vector x/m y/m)
+
+magn :: Vector -> Float
+magn (Vector x y) = sqrt(x**2 + y**2)
