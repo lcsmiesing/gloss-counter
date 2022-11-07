@@ -7,7 +7,8 @@ nO_SECS_BETWEEN_CYCLES = 5
 
 
 data GameState = GameState {
-                   asteroids  :: [Asteroid]
+                   player :: Player
+                 , asteroids  :: [Asteroid]
                  , elapsedTime :: Float
                  , enemies :: [Enemy]
                  , bullets :: [Bullet]
