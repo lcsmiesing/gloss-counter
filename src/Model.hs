@@ -5,6 +5,7 @@ module Model where
 nO_SECS_BETWEEN_CYCLES :: Float
 nO_SECS_BETWEEN_CYCLES = 5
 
+
 data GameState = GameState {
                    asteroids  :: [Asteroid]
                  , elapsedTime :: Float
@@ -17,31 +18,35 @@ data GameState = GameState {
                   points :: Int
                 }
 data Player = Player {
-                velocity :: Vector
+                velp :: Vector
               , angle :: Vector
-              , position :: Point
+              , posp :: Point
               }
 data Asteroid = Asteroid {
-                  velocity :: Vector
-                , position :: Point
+                  vela :: Vector
+                , posa :: Point
                 , size :: Int
                 }
 data Enemy = Enemy {
-              velocity :: Vector
-            , position :: Point
-            }
+              vele :: Vector
+            , pose :: Point
+            } 
+
 data Bullet = Bullet {
-                velocity :: Vector
-              , position :: Point
+                velb :: Vector
+              , posb :: Point
               , fromEnemy :: Bool
-              }
+              } 
+
 data Obstacle = Obstacle {
-                  position :: (Point, Point)
+                  poso :: (Point, Point)
                 , width :: Int
                 }
 
-data Point = (Float, Float)
-data Vector = (Float, Float)
+
+
+data Point = Point Float Float 
+data Vector = Vector Float Float
 
 
 
