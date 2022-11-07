@@ -37,7 +37,7 @@ data Bullet = Bullet {
               }
 data Obstacle = Obstacle {
                   position :: (Point, Point)
-                  width :: Int
+                , width :: Int
                 }
 
 data Point = (Float, Float)
