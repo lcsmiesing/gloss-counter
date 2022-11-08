@@ -12,14 +12,17 @@ import System.Random
 
 runGame gstate@(GamePlay {bullets = b}) = gstate {bullets = map updateBull b}
   where
-    updateBull (Bullet vel pos f) = Bullet vel (vel.+pos) f
+    updateBull (Bullet vel pos f) = Bullet vel (vel .+ pos) f
 
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState
-step secs gstate
-  | elapsedTime gstate + secs > nO_SECS_BETWEEN_CYCLES
+step secs gstate@(GamePlay {isPaused = p})
+  | not p
   = -- We show a new random number
     do return $ runGame gstate
+  | p
+  =
+    do return gstate
   | otherwise
   = -- Just update the elapsed time
     return $ gstate { elapsedTime = elapsedTime gstate + secs }
@@ -29,28 +32,36 @@ input :: Event -> GameState -> IO GameState
 input e gstate = return (inputKey e gstate)
 
 inputKey :: Event -> GameState -> GameState
-inputKey (EventKey (Char c) _ _ _) gstate
-  = case c of
+inputKey (EventKey (Char 'p') Down _ _) gstate@(GamePlay {isPaused})
+    | isPaused        = gstate {isPaused = False}
+    | otherwise       = gstate {isPaused = True}
+
+inputKey (EventKey (Char c) Down _ _) gstate
+  = case c of 
       'w' -> gstate
       'a' -> gstate
       's' -> gstate
       'd' -> gstate
+      _   -> gstate
 
 inputKey (EventKey (MouseButton LeftButton) Down _ mousePos)
-  gstate@(GamePlay {player = p@(Player _ _ posp), bullets}) = gstate {bullets = bullets ++ [newBullet]}
+  gstate@(GamePlay {player = p@(Player _ _ posp), bullets, isPaused})
+    | isPaused  = gstate 
+    | otherwise = gstate {bullets = bullets ++ [newBullet]}
     where
       newBullet = Bullet bulletVel posp False
-      bulletVel =  (.*) (norm (mousePos .- posp)) 10
+      bulletVel =  10 .* norm (mousePos .- posp)
+
 inputKey _ gstate = gstate -- Otherwise keep the same
 
 (.+) :: Point -> Point -> Point
-(.+) (x,y) (a,b) = (x+a, y+b)
+(x,y) .+ (a,b) = (x+a, y+b)
 
 (.-) :: Point -> Point -> Point
-(.-) (x,y) (a,b) = (x-a, y-b)
+(x,y) .- (a,b) = (x-a, y-b)
 
-(.*) :: Vector -> Float -> Vector
-(.*) (x,y) s = (s*x,s*y)
+(.*) :: Float -> Vector -> Vector
+s .* (x,y) = (s*x,s*y)
 
 norm :: Vector -> Vector
 norm (x,y) = let m = magn (x,y) in (x/m,y/m)

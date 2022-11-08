@@ -22,7 +22,7 @@ data GameState = GamePlay {
                 }
 data Player = Player {
                 velp :: Vector
-              , angle :: Vector
+              , angle :: Float
               , posp :: Point
               }
 data Asteroid = Asteroid {
@@ -47,8 +47,8 @@ data Obstacle = Obstacle {
                 , height :: Float
                 }
 
-initialState :: [String] -> GameState
-initialState s = GamePlay {
+initialState :: GameState
+initialState = GamePlay {
                    player = Player (0,0) (0,0) (0,0)
                  , asteroids  = []
                  , elapsedTime = 0
