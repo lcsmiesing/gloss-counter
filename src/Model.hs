@@ -16,32 +16,32 @@ data GameState = GamePlay {
                  , obstacles :: [Obstacle]
                  , points :: Int
                  , isPaused :: Bool
-                 }
+                }  
                 | GameOver {
-                  points :: Int
+                   points :: Int
                 }
-data Player = Player {
-                velp :: Vector
-              , angle :: Float
-              , posp :: Point
-              }
-data Asteroid = Asteroid {
-                  vela :: Vector
-                , posa :: Point
-                , size :: Int
+data Player    = Player {
+                   velp :: Vector
+                 , angle :: Float
+                 , posp :: Point
                 }
-data Enemy = Enemy {
-              vele :: Vector
-            , pose :: Point
-            } 
+data Asteroid  = Asteroid {
+                   vela :: Vector
+                 , posa :: Point
+                 , size :: Int
+                }
+data Enemy     = Enemy {
+                   vele :: Vector
+                 , pose :: Point
+                } 
 
-data Bullet = Bullet {
-                velb :: Vector
-              , posb :: Point
-              , fromEnemy :: Bool
-              } 
+data Bullet    = Bullet {
+                   velb :: Vector
+                 , posb :: Point
+                 , fromEnemy :: Bool
+                }  
 
-data Obstacle = Obstacle {
+data Obstacle   = Obstacle {
                   poso :: (Point, Point)
                 , width :: Int
                 }

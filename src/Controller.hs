@@ -10,9 +10,11 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
 
-runGame gstate@(GamePlay {bullets = b}) = gstate {bullets = map updateBull b}
+runGame :: GameState -> GameState
+runGame gstate@(GamePlay {player = p, bullets = b}) = gstate {player = updatePlayer p, bullets = map updateBull b}
   where
-    updateBull (Bullet vel pos f) = Bullet vel (vel .+ pos) f
+    updateBull (Bullet v p f) = Bullet v (v .+ p) f
+    updatePlayer (Player v a p) = Player v a (v .+ p)
 
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState
@@ -33,16 +35,19 @@ input e gstate = return (inputKey e gstate)
 
 inputKey :: Event -> GameState -> GameState
 inputKey (EventKey (Char 'p') Down _ _) gstate@(GamePlay {isPaused})
-    | isPaused        = gstate {isPaused = False}
-    | otherwise       = gstate {isPaused = True}
+    | isPaused  = gstate {isPaused = False}
+    | otherwise = gstate {isPaused = True}
 
-inputKey (EventKey (Char c) Down _ _) gstate
-  = case c of 
-      'w' -> gstate
-      'a' -> gstate
-      's' -> gstate
-      'd' -> gstate
-      _   -> gstate
+inputKey (EventKey (Char c) Down _ _) gstate@(GamePlay {player = Player vel ang pos})
+  = let direction = case c of 
+                      'w' -> (0, 1)
+                      'a' -> (-1, 0)
+                      's' -> (0, -1)
+                      'd' -> (1, 0)
+                      _   -> (0, 0)
+    in
+      gstate {player = Player (8 .* norm (vel .+ direction)) ang pos}
+        
 
 inputKey (EventKey (MouseButton LeftButton) Down _ clickPos)
   gstate@(GamePlay {player = p@(Player _ _ posp), bullets, isPaused})
@@ -52,7 +57,8 @@ inputKey (EventKey (MouseButton LeftButton) Down _ clickPos)
       newBullet = Bullet bulletVel posp False
       bulletVel =  10 .* norm (clickPos .- posp)
 
-inputKey (EventMotion (x,y)) gstate@(GamePlay {player = (Player velp a posp)}) = gstate {player = Player velp (argV (x,y)) posp}
+inputKey (EventMotion (x,y)) gstate@(GamePlay {player = (Player velp angle posp@(a,b))}) 
+  = gstate {player = Player velp (argV (x-a,y-b)) posp}
 
 inputKey _ gstate = gstate -- Otherwise keep the same
 
