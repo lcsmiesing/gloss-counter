@@ -14,8 +14,10 @@ runGame :: GameState -> GameState
 runGame gstate@(GamePlay {player = p, bullets = b}) = gstate {player = updatePlayer p, bullets = map updateBull b}
   where
     updateBull (Bullet v p f) = Bullet v (v .+ p) f
-    updatePlayer (Player v a p) = Player v a (v .+ p)
-
+    updatePlayer (Player v a p) = Player (newVel v) a (newVel v .+ p)
+    newVel v | magV v > 10 = 10 .* (norm v)
+             | otherwise   = v
+ 
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState
 step secs gstate@(GamePlay {isPaused = p})
@@ -40,13 +42,13 @@ inputKey (EventKey (Char 'p') Down _ _) gstate@(GamePlay {isPaused})
 
 inputKey (EventKey (Char c) Down _ _) gstate@(GamePlay {player = Player vel ang pos})
   = let direction = case c of 
-                      'w' -> (0, 1)
-                      'a' -> (-1, 0)
-                      's' -> (0, -1)
-                      'd' -> (1, 0)
+                      'w' -> (0, 5)
+                      'a' -> (-5, 0)
+                      's' -> (0, -5)
+                      'd' -> (5, 0)
                       _   -> (0, 0)
     in
-      gstate {player = Player (8 .* norm (vel .+ direction)) ang pos}
+      gstate {player = Player ((vel .+ direction)) ang pos}
         
 
 inputKey (EventKey (MouseButton LeftButton) Down _ clickPos)
