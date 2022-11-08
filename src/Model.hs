@@ -1,6 +1,7 @@
--- | This module contains the data types
---   which represent the state of the game
 module Model where
+
+import Graphics.Gloss.Data.Vector ( Vector )
+import Graphics.Gloss.Data.Point.Arithmetic ( Point )
 
 nO_SECS_BETWEEN_CYCLES :: Float
 nO_SECS_BETWEEN_CYCLES = 5
@@ -44,12 +45,13 @@ data Obstacle = Obstacle {
                 , width :: Int
                 }
 
-
-
-data Point = Point Float Float 
-data Vector = Vector Float Float
-
-
-
 initialState :: GameState
-initialState = GameState ShowNothing 0
+initialState = GamePlay {
+                   player = Player (0,0) (0,0) (0,0)
+                 , asteroids  = []
+                 , elapsedTime = 0
+                 , enemies = []
+                 , bullets = []
+                 , obstacles = []
+                 , points = 0
+                 }

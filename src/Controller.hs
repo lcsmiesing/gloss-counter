@@ -1,3 +1,5 @@
+{-# language NamedFieldPuns #-}
+
 -- | This module defines how the state changes
 --   in response to time and user input
 module Controller where
@@ -13,9 +15,7 @@ step :: Float -> GameState -> IO GameState
 step secs gstate
   | elapsedTime gstate + secs > nO_SECS_BETWEEN_CYCLES
   = -- We show a new random number
-    do randomNumber <- randomIO
-       let newNumber = abs randomNumber `mod` 10
-       return $ GameState (ShowANumber newNumber) 0
+    do return $ gstate
   | otherwise
   = -- Just update the elapsed time
     return $ gstate { elapsedTime = elapsedTime gstate + secs }
@@ -27,30 +27,29 @@ input e gstate = return (inputKey e gstate)
 inputKey :: Event -> GameState -> GameState
 inputKey (EventKey (Char c) _ _ _) gstate
   = case c of
-      'w' -> --iets jwz
-      'a' ->
-      's' ->
-      'd' ->
+      'w' -> gstate
+      'a' -> gstate
+      's' -> gstate
+      'd' -> gstate
 
-inputKey (EventKey (MouseButton LeftButton) Down MousePos)
-  = gstate@(GameState {player, bullets}) = gstate {bullets = bullets:newBullet}
+inputKey (EventKey (MouseButton LeftButton) Down _ mousePos)
+  gstate@(GamePlay {player = p@(Player _ _ posp), bullets}) = gstate {bullets = bullets ++ [newBullet]}
     where
-      newBullet = Bullet {velb = bulletVel posb, posb = player@posp, fromEnemy = False}
-      bulletVel p =  norm (p .- MousePos) .* 10
-      posb = --SDFHSDFSDKLFSLDJFLKSDJFSLKDJFSLKDFSDLKJF
+      newBullet = Bullet bulletVel posp False
+      bulletVel =  norm (posp .- mousePos)
 inputKey _ gstate = gstate -- Otherwise keep the same
 
-.+ :: Point -> Point -> Point
-.+ (Point x y) (Point a b) = Point (x+a) (y+b)
+(.+) :: Point -> Point -> Point
+(.+) (x,y) (a,b) = (x+a, y+b)
 
-.- :: Point -> Point -> Point
-.- (Point x y) (Point a b) = Point (x-a) (y-b)
+(.-) :: Point -> Point -> Point
+(.-) (x,y) (a,b) = (x-a, y-b)
 
-.* :: Vector -> Float -> Vector
-.* (Vector x y) s = Vector (s*x) (s*y)
+(.*) :: Vector -> Float -> Vector
+(.*) (x,y) s = (s*x,s*y)
 
 norm :: Vector -> Vector
-norm v@(Vector x y) = let m = magn v in (Vector x/m y/m)
+norm (x,y) = let m = magn (x,y) in (x/m,y/m)
 
 magn :: Vector -> Float
-magn (Vector x y) = sqrt(x**2 + y**2)
+magn (x,y) = sqrt(x**2 + y**2)
