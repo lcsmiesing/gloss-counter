@@ -4,7 +4,7 @@ import Graphics.Gloss.Data.Vector ( Vector )
 import Graphics.Gloss.Data.Point.Arithmetic ( Point )
 
 nO_SECS_BETWEEN_CYCLES :: Float
-nO_SECS_BETWEEN_CYCLES = 5
+nO_SECS_BETWEEN_CYCLES = 0
 
 
 data GameState = GamePlay {
@@ -15,6 +15,7 @@ data GameState = GamePlay {
                  , bullets :: [Bullet]
                  , obstacles :: [Obstacle]
                  , points :: Int
+                 , isPaused :: Bool
                  }
                 | GameOver {
                   points :: Int
@@ -54,4 +55,5 @@ initialState = GamePlay {
                  , bullets = []
                  , obstacles = []
                  , points = 0
+                 , isPaused = False
                  }

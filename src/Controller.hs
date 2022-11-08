@@ -10,12 +10,16 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
 
+runGame gstate@(GamePlay {bullets = b}) = gstate {bullets = map updateBull b}
+  where
+    updateBull (Bullet vel pos f) = Bullet vel (vel.+pos) f
+
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState
 step secs gstate
   | elapsedTime gstate + secs > nO_SECS_BETWEEN_CYCLES
   = -- We show a new random number
-    do return $ gstate
+    do return $ runGame gstate
   | otherwise
   = -- Just update the elapsed time
     return $ gstate { elapsedTime = elapsedTime gstate + secs }
@@ -36,7 +40,7 @@ inputKey (EventKey (MouseButton LeftButton) Down _ mousePos)
   gstate@(GamePlay {player = p@(Player _ _ posp), bullets}) = gstate {bullets = bullets ++ [newBullet]}
     where
       newBullet = Bullet bulletVel posp False
-      bulletVel =  norm (posp .- mousePos)
+      bulletVel =  (.*) (norm (mousePos .- posp)) 10
 inputKey _ gstate = gstate -- Otherwise keep the same
 
 (.+) :: Point -> Point -> Point
