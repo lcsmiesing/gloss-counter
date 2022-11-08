@@ -3,10 +3,6 @@ module Model where
 import Graphics.Gloss.Data.Vector ( Vector )
 import Graphics.Gloss.Data.Point.Arithmetic ( Point )
 
-nO_SECS_BETWEEN_CYCLES :: Float
-nO_SECS_BETWEEN_CYCLES = 0
-
-
 data GameState = GamePlay {
                    player :: Player
                  , asteroids  :: [Asteroid]
