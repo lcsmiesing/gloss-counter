@@ -33,27 +33,36 @@ data Asteroid = Asteroid {
 data Enemy = Enemy {
               vele :: Vector
             , pose :: Point
-            } 
+            }
 
 data Bullet = Bullet {
                 velb :: Vector
               , posb :: Point
               , fromEnemy :: Bool
-              } 
+              }
 
 data Obstacle = Obstacle {
-                  poso :: (Point, Point)
-                , width :: Int
+                  poso :: Point
+                , width :: Float
+                , height :: Float
                 }
 
-initialState :: GameState
-initialState = GamePlay {
-                   player = Player (0,0) 0 (0,0)
+initialState :: [String] -> GameState
+initialState s = GamePlay {
+                   player = Player (0,0) 0 (0,50)
                  , asteroids  = []
                  , elapsedTime = 0
                  , enemies = []
                  , bullets = []
-                 , obstacles = []
+                 , obstacles = obs
                  , points = 0
                  , isPaused = False
                  }
+               where
+                  obs = map (getObs . readStr) s
+
+readStr :: String -> [Float]
+readStr s = map read $ words s
+
+getObs :: [Float] -> Obstacle
+getObs (a:b:c:d:_) = Obstacle (a,b) c d
