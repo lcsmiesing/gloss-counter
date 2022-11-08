@@ -47,9 +47,9 @@ data Obstacle = Obstacle {
                 , height :: Float
                 }
 
-initialState :: GameState
-initialState = GamePlay {
-                   player = Player (0,0) (0,0) (0,0)
+initialState :: [String] -> GameState
+initialState s = GamePlay {
+                   player = Player (0,0) 0 (0,0)
                  , asteroids  = []
                  , elapsedTime = 0
                  , enemies = []
