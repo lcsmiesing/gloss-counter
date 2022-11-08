@@ -9,9 +9,11 @@ view :: GameState -> IO Picture
 view = return . viewPure
 
 viewPure :: GameState -> Picture
-viewPure (GamePlay {player = p, bullets = b}) = 
-  pictures [speler p, kogel b]
+viewPure (GamePlay {player = p, bullets = b, obstacles = ob}) = 
+  pictures [speler p, kogel b, obs ob]
   where
     speler (Player _ _ (x,y)) = color green (translate x y (circle 10))
     kogel b = pictures [translate x y (color white (circle 2))
                          | Bullet _ (x,y) _ <- b]
+    obs ob = pictures [color orange (translate x y (rectangleSolid w h)) 
+                         | Obstacle (x,y) w h <- ob]
