@@ -48,7 +48,7 @@ data Obstacle = Obstacle {
 
 initialState :: GameState
 initialState = GamePlay {
-                   player = Player (0,0) 0 (0,50)
+                   player = Player (0,0) 0 (0,0)
                  , asteroids  = []
                  , elapsedTime = 0
                  , enemies = []

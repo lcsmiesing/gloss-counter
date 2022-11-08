@@ -5,7 +5,7 @@
 module Controller where
 
 import Model
-
+import Graphics.Gloss.Data.Vector
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
@@ -44,13 +44,15 @@ inputKey (EventKey (Char c) Down _ _) gstate
       'd' -> gstate
       _   -> gstate
 
-inputKey (EventKey (MouseButton LeftButton) Down _ mousePos)
+inputKey (EventKey (MouseButton LeftButton) Down _ clickPos)
   gstate@(GamePlay {player = p@(Player _ _ posp), bullets, isPaused})
     | isPaused  = gstate 
     | otherwise = gstate {bullets = bullets ++ [newBullet]}
     where
       newBullet = Bullet bulletVel posp False
-      bulletVel =  10 .* norm (mousePos .- posp)
+      bulletVel =  10 .* norm (clickPos .- posp)
+
+inputKey (EventMotion (x,y)) gstate@(GamePlay {player = (Player velp a posp)}) = gstate {player = Player velp (argV (x,y)) posp}
 
 inputKey _ gstate = gstate -- Otherwise keep the same
 
