@@ -24,9 +24,8 @@ viewPure (GamePlay {player = p, bullets = b, obstacles = ob, asteroids = as, ene
     ast as = pictures ([color white (translate v w (circleSolid s))
                          | Asteroid (x,y) (v,w) s f <- as] ++ [color white (line [posa,posa.+(50.*vela)])
                          | Asteroid vela posa s f <- as])
-
     ene em = pictures [color red (arrow [posa,posa.+(15.*norm vela)]) | Enemy vela posa s <- em]
-    ani am = pictures [color blue (translate x y(circle (mod' e 15)))| Animation (x,y) d s <- am, d > 0]
+    ani am = pictures [color blue (translate x y(circle (37.5 - (d/10))))| Animation (x,y) d s <- am, d > 0]
 -- two functions below are taken from:
 -- https://github.com/ivanperez-keera/SoOSiM-ui/blob/master/src/Graphics/Gloss/AdvancedShapes/Arrows.hs
 arrow :: Path -> Picture

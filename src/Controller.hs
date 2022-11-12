@@ -19,21 +19,21 @@ runGame gstate@(GamePlay {player = p@(Player pvel pang ppos),
                           obstacles = ob,
                           enemies = em,
                           elapsedTime = e,
-                          animations = anims}) = gstate {player = updatePlayer p, bullets = map updateBull b, asteroids = newas, enemies = map updateEnemies em, animations = newaniii}
+                          animations = anims}) = gstate {player = updatePlayer p, bullets = map updateBull b, asteroids = newas, enemies = map updateEnemies em, animations = newanim}
   where
     
-    get as@(Asteroid vel pos f s) = diff2 (vel,s,pos, "") (map (coll as) ob)
-    gete em@(Enemy vel pos s) = diff (vel,s) (map (colle em) ob)
-    getb b@(Bullet vel pos d s) =  diff (vel,s) (map (collb b) ob)
-    updates = map get a
-    omg = map (\(x,y,z,zz) -> (z,zz)) updates
-    nonut = [dm | dm@(z,zz) <- omg, zz == "hit"]
-    newanim | nonut /= [] = map (\(x,y) -> Animation x 360 "") nonut
-            | otherwise = []
-    newaniii = map (\(Animation x y z) -> (Animation x (y-1) z)) (anims ++ newanim)
+    get as@(Asteroid vel pos f s) = diff2 (vel,s,pos, "") (map (coll as) ob) --returns direction vector of asteroid, if modified by a "bounce" against an Obstacle. otherwise returns the same direction vector
+    gete em@(Enemy vel pos s) = diff (vel,s) (map (colle em) ob) --returns direction vector of enemy, same as for get asteroid
+    getb b@(Bullet vel pos d s) =  diff (vel,s) (map (collb b) ob) --returns directions vector of bullet, same as for asteroid
+    updates = map get a --for every asteroid, gets their (potentially updated) direction vector, their lastbounce, their position and lastly a value that tells us if the asteroid hit an obstacle
+    newanim = map (\(Animation x y z) -> (Animation x (y-1) z)) (anims ++ (map (\(x,y) -> Animation x 360 "") [dm | dm@(z,zz) <- map (\(x,y,z,zz) -> (z,zz)) updates, zz == "hit"]))
+    --gets ^^ turns updates that are a hit (i.e. they collided with an Obstacle) into animations, and adds these animations to the animation list, part of gamestate
     newas = map (\((x,y,z,zz),(Asteroid vel pos f s)) -> Asteroid x (isHit (edgeDetection gstate (vel .+ pos)) f b) f y) (zip updates a)
+    --updates ^^ our asteroids in velocity, position and LastBounce
     updateEnemies em@(Enemy vel pos s) = Enemy (rot ppos pos (fst (gete em))) (edgeDetection gstate(vel .+ pos)) (snd(gete em))
+    --updates ^^ our enemies in velocity, position and LastBounce
     updateBull bu@(Bullet vel pos f d) = Bullet (fst (getb bu)) (vel .+ pos) f d
+    --updates ^^ our bullets in velocity, position and LastBounce
     updatePlayer (Player v a p) = Player (newVel v) a (newVel v .+ p)
     newVel v | magV v > 10 = 10 .* (norm v)
              | otherwise   = v
@@ -65,7 +65,6 @@ edgeDetection GameOver {points} p = p
 --this function checks if an asteroid collides with a side of an obstacle
 --if it does, it changes the asteroids direction vector to "bounce" off the side of the obstacle
 --using a predefined reflection vector
- 
 coll :: Asteroid -> Obstacle -> (Vector,String,Point,String)
 coll (Asteroid v p@(x,y) _ f) (Obstacle _ _ _ (a,b,c,d)) 
                                                        | top && f /= "top"  = (v .- ((2*dotproduct v (0,1)).*(0,1)),"top",p,"") 
@@ -103,10 +102,10 @@ collb (Bullet v p t f) (Obstacle _ _ _ (a,b,c,d)) | top && f /= "top" = (v .- ((
     left = distance a c p --(-1,0)
     right = distance b d p --(1,0)
     bottom = distance c d p --(0,-1)
-
-
-
-
+--                                      direction vector    lastbounce
+--                                               |           |
+--                                               |           |
+--checks whether a reflection has occurred       v           v
 diff :: (Vector,String) -> [(Vector,String)] -> (Vector,String)
 diff v [] = v
 diff v (x:xs) | v /= x = x
@@ -114,7 +113,7 @@ diff v (x:xs) | v /= x = x
 
 diff2 :: (Vector,String,Point,String) -> [(Vector,String,Point,String)] -> (Vector,String,Point,String)
 diff2 v [] = v
-diff2 cc@(v,vv,vvv,vvvv) (r@(x,xx,xxx,xxxx):xs) | v /= x = (x,xx,xxx,"hit")
+diff2 cc@(v,_,_,_) ((r1,r2,r3,_):xs) | v /= r1 = (r1,r2,r3,"hit")
                                 | otherwise = diff2 cc xs
 
 isHit :: Point -> Float -> [Bullet] -> Point
