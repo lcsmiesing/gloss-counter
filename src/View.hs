@@ -6,18 +6,19 @@ import Graphics.Gloss
 import Model
 import Controller
 import Graphics.Gloss.Data.Vector
+import Data.Fixed
 
 view :: GameState  -> IO Picture
 view = return . viewPure
 
 viewPure :: GameState -> Picture
-viewPure (GamePlay {player = p, bullets = b, obstacles = ob, asteroids = as, enemies = em}) = 
-  pictures [speler p, kogel b, obs ob, ast as, ene em]
+viewPure (GamePlay {player = p, bullets = b, obstacles = ob, asteroids = as, enemies = em, animations = am, elapsedTime = e}) = 
+  pictures [speler p, kogel b, obs ob, ast as, ene em, ani am]
   where
     --speler (Player _ _ (x,y)) = color green (translate x y (polygon [(0,50), (-25,0), (25,0)]))
     speler (Player _ angle (x,y)) = color green (translate x y (polygon (map (rotateV angle) [(-3,-5), (-5,0), (-3,5), (10,0)])))
     kogel b = pictures [translate x y (color white (circle 2))
-                         | Bullet _ (x,y) _ <- b]
+                         | Bullet _ (x,y) _ _ <- b]
     obs ob = pictures [color orange (translate x y (rectangleSolid w h)) 
                          | Obstacle (x,y) w h d <- ob]
     ast as = pictures ([color white (translate v w (circleSolid s))
@@ -25,7 +26,7 @@ viewPure (GamePlay {player = p, bullets = b, obstacles = ob, asteroids = as, ene
                          | Asteroid vela posa s f <- as])
 
     ene em = pictures [color red (arrow [posa,posa.+(15.*norm vela)]) | Enemy vela posa s <- em]
-
+    ani am = pictures [color blue (translate x y(circle (mod' e 15)))| Animation (x,y) d s <- am, d > 0]
 -- two functions below are taken from:
 -- https://github.com/ivanperez-keera/SoOSiM-ui/blob/master/src/Graphics/Gloss/AdvancedShapes/Arrows.hs
 arrow :: Path -> Picture
