@@ -13,7 +13,7 @@ view = return . viewPure
 
 viewPure :: GameState -> Picture
 viewPure (GamePlay {player = p, bullets = b, obstacles = ob, asteroids = as, enemies = em, animations = am, elapsedTime = e}) = 
-  pictures [speler p, kogel b, obs ob, ast as, ene em, ani am]
+  pictures [speler p, kogel b, obs ob, ast as, ene em, ani am, elap e]
   where
     --speler (Player _ _ (x,y)) = color green (translate x y (polygon [(0,50), (-25,0), (25,0)]))
     speler (Player _ angle (x,y)) = color green (translate x y (polygon (map (rotateV angle) [(-3,-5), (-5,0), (-3,5), (10,0)])))
@@ -26,6 +26,7 @@ viewPure (GamePlay {player = p, bullets = b, obstacles = ob, asteroids = as, ene
                          | Asteroid vela posa s f <- as])
     ene em = pictures [color red (arrow [posa,posa.+(15.*norm vela)]) | Enemy vela posa s <- em]
     ani am = pictures [color blue (translate x y(circle (37.5 - (d/10))))| Animation (x,y) d s <- am, d > 0]
+    elap e = pictures [translate (-275) 275 (scale 0.1 0.1(color green (text ("score: " ++(show (round e))))))]
 -- two functions below are taken from:
 -- https://github.com/ivanperez-keera/SoOSiM-ui/blob/master/src/Graphics/Gloss/AdvancedShapes/Arrows.hs
 arrow :: Path -> Picture
