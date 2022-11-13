@@ -18,12 +18,11 @@ viewPure (GamePlay {player = p, bullets = b, obstacles = ob, asteroids = as, ene
     --speler (Player _ _ (x,y)) = color green (translate x y (polygon [(0,50), (-25,0), (25,0)]))
     speler (Player _ angle (x,y)) = color green (translate x y (polygon (map (rotateV angle) [(-3,-5), (-5,0), (-3,5), (10,0)])))
     kogel b = pictures [translate x y (color white (circle 2))
-                         | Bullet _ (x,y) _ _ <- b]
+                         | Bullet _ (x,y) _  <- b]
     obs ob = pictures [color orange (translate x y (rectangleSolid w h)) 
                          | Obstacle (x,y) w h d <- ob]
     ast as = pictures ([color white (translate v w (circleSolid s))
-                         | Asteroid (x,y) (v,w) s f <- as] ++ [color white (line [posa,posa.+(50.*vela)])
-                         | Asteroid vela posa s f <- as])
+                         | Asteroid (x,y) (v,w) s <- as])
     ene em = pictures [color red (arrow [posa,posa.+(15.*norm vela)]) | Enemy vela posa s <- em]
     ani am = pictures [color blue (translate x y(circle (37.5 - (d/10))))| Animation (x,y) d s <- am, d > 0]
     elap e = pictures [translate (-275) 275 (scale 0.1 0.1(color green (text ("score: " ++(show points)))))]

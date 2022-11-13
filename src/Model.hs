@@ -31,7 +31,6 @@ data Asteroid = Asteroid {
                   vela :: Vector
                 , posa :: Point
                 , size :: Float
-                , lastBounce :: String
                 }
 
 
@@ -45,7 +44,6 @@ data Bullet = Bullet {
                 velb :: Vector
               , posb :: Point
               , fromEnemy :: Bool
-              , lastBounceB :: String
               }
 
 data Obstacle = Obstacle {
@@ -86,7 +84,7 @@ readStr :: String -> [Float]
 readStr s = map read $ words s
 
 crAs :: ((Float,Float),(Float,Float)) -> Asteroid
-crAs ((x,y),(v,w)) = Asteroid (x,y) (300,0) 15 ""
+crAs ((x,y),(v,w)) = Asteroid (x,y) (300,0) 25
 
 crEm :: ((Float,Float)) -> Enemy
 crEm (x,y) = Enemy (x,y) (-300,300) ""
