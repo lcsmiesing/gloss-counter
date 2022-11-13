@@ -15,14 +15,26 @@ runGame gstate@(GamePlay {player = p@(Player pvel pang ppos),
                           bullets = b,
                           asteroids = a, 
                           obstacles = ob,
-                          enemies = em}) = gstate {player = updatePlayer p, bullets = map updateBull b, asteroids = newas, enemies = map updateEnemies em}
+                          enemies = em,
+                          animations = anims,
+                          points = points}) = gstate {player = updatePlayer p, bullets = map updateBull b, asteroids = newas, enemies = map updateEnemies em, animations = newAnimations, points = updatePoints}
   where
-    updateBull (Bullet vel pos f) = Bullet vel (vel .+ pos) f
-    get as@(Asteroid vel pos f s) = diff (vel,s) (map (coll as) ob)
+    updateBull (Bullet vel pos f s) = Bullet vel (vel .+ pos) f s
     gete em@(Enemy vel pos s) = diff (vel,s) (map (colle em) ob)
-    updateEnemies em@(Enemy vel pos s) = Enemy (rot ppos pos ((\(x,y) -> x) (gete em))) (edgeDetection gstate(vel .+ pos)) ((\(x,y) -> y) (gete em))
-    updateAsteroids as@(Asteroid vel pos f s) = Asteroid ((\(x,y) -> x) (get as))  (isHit (edgeDetection gstate (vel .+ pos)) f b) f ((\(x,y) -> y) (get as))
+    updateEnemies em@(Enemy vel pos s) = Enemy (rot ppos pos (fst (gete em))) (edgeDetection gstate(vel .+ pos)) (snd (gete em))
+    updateAsteroids as@(Asteroid vel pos s str) = Asteroid newVelocity (isHit (edgeDetection gstate (newVelocity .+ pos)) s b) s str
+                                                where
+                                                  newVelocity = asteroidHelper as
+    asteroidHelper a@(Asteroid v _ _ _) | any (True==) $ map (collision a) ob = (-1) .* v
+                                        | otherwise                       = v
+    --updateAsteroid = map (\((x,y,z,zz),(Asteroid vel pos f s)) -> Asteroid x (isHit (edgeDetection gstate (vel .+ pos)) f b) f y) (zip updates a)
     newas = map updateAsteroids a
+    zippie = zip newas a
+    changes = [pos | ((Asteroid vel1 pos _ _),(Asteroid vel2 _ _ _)) <- zippie, vel1 /= vel2] --for every asteroid, gets their (potentially updated) direction vector, their lastbounce, their position and lastly a value that tells us if the asteroid hit an obstacle
+    newAnimations = map (\(Animation x y z) -> (Animation x (y-1) z)) (anims ++ (map (\x -> Animation x 360 "") changes))
+    playerDisFromEnemies = map (dis ppos . pose) em
+    updatePoints | any (<1) playerDisFromEnemies = points - 0.5
+                 | otherwise = points + 0.005
     updatePlayer (Player v a p) = Player (newVel v) a (newVel v .+ p)
     newVel v | magV v > 10 = 10 .* (norm v)
              | otherwise   = v
@@ -41,6 +53,8 @@ step secs gstate@(GamePlay {isPaused = p})
   = -- Just update the elapsed time
     return $ gstate { elapsedTime = elapsedTime gstate + secs }
 
+
+
 edgeDetection :: GameState -> Point -> Point
 edgeDetection GamePlay {gameBorders = ((a,b),(c,d)), obstacles = ob} (x,y) 
                               | x <= a-20 = (abs x, y)
@@ -53,18 +67,18 @@ edgeDetection GameOver {points} p = p
 --this function checks if an asteroid collides with a side of an obstacle
 --if it does, it changes the asteroids direction vector to "bounce" off the side of the obstacle
 --using a predefined reflection vector
-coll :: Asteroid -> Obstacle -> (Vector,String)
-coll (Asteroid v p@(x,y) _ f) (Obstacle _ _ _ (a,b,c,d)) | top && f /= "top" = (v .- ((2*dotproduct v (0,1)).*(0,1)),"top")
-                                                       | left && f/= "left" = (v .- ((2*dotproduct v (-1,0)).*(-1,0)),"left")
-                                                       | right && f/="right" = (v .- ((2*dotproduct v (1,0)).*(1,0)),"right")
-                                                       | bottom && f/="bottom" = (v .- ((2*dotproduct v (0,-1)).*(0,-1)),"bottom")
-                                                       | otherwise = (v,f)
-  where
-    top = distance a b p -- (0,1)
-    left = distance a c p --(-1,0)
-    right = distance b d p --(1,0)
-    bottom = distance c d p --(0,-1)
 
+collision :: Asteroid -> Obstacle -> Bool
+collision (Asteroid _ (x,y) s _) (Obstacle (a,b) w h _) | xdist > w/2 + s  = False
+                                                        | ydist > h/2 + s  = False
+                                                        | xdist <= w/2   = True
+                                                        | ydist <= h/2     = True
+                                                        | corner <= s**2 = True
+                                                        | otherwise      = False
+                                                        where
+                                                          xdist = abs $ x - a
+                                                          ydist = abs $ y - b
+                                                          corner = (xdist - w/2)**2 + (ydist - h/2)**2
 --same as coll but for enemies  
 colle :: Enemy -> Obstacle -> (Vector,String)
 colle (Enemy v p f) (Obstacle _ _ _ (a,b,c,d)) | top && f /= "top" = (v .- ((2*dotproduct v (0,1)).*(0,1)),"top")
@@ -88,7 +102,7 @@ isHit :: Point -> Float -> [Bullet] -> Point
 isHit p s b | mini < s = (-300,300) 
             | otherwise = p
   where
-    bulletMap = [pos | Bullet _ pos _ <- b]
+    bulletMap = [pos | Bullet _ pos _ _ <- b]
     m = map (disc s p) bulletMap
     mini = minimum' m
 
@@ -108,10 +122,10 @@ inputKey (EventKey (Char 'p') Down _ _) gstate@(GamePlay {isPaused})
 
 inputKey (EventKey (Char c) Down _ _) gstate@(GamePlay {player = Player vel ang pos})
   = let direction = case c of 
-                      'w' -> (0, 5)
-                      'a' -> (-5, 0)
-                      's' -> (0, -5)
-                      'd' -> (5, 0)
+                      'w' -> (0, 1)
+                      'a' -> (-1, 0)
+                      's' -> (0, -1)
+                      'd' -> (1, 0)
                       _   -> (0, 0)
     in
       gstate {player = Player ((vel .+ direction)) ang pos}
@@ -122,13 +136,14 @@ inputKey (EventKey (MouseButton LeftButton) Down _ clickPos)
     | isPaused  = gstate 
     | otherwise = gstate {bullets = bullets ++ [newBullet]}
     where
-      newBullet = Bullet bulletVel posp False
+      newBullet = Bullet bulletVel posp False ""
       bulletVel =  10 .* norm (clickPos .- posp)
 
 inputKey (EventMotion (x,y)) gstate@(GamePlay {player = (Player velp angle posp@(a,b))}) 
   = gstate {player = Player velp (argV (x-a,y-b)) posp}
 
 inputKey _ gstate = gstate -- Otherwise keep the same
+
 
 (.+) :: Point -> Point -> Point
 (x,y) .+ (a,b) = (x+a, y+b)

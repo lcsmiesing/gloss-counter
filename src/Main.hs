@@ -3,19 +3,18 @@ module Main where
 import Controller
 import Model
 import View
-
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
 
 main :: IO ()
 main = do
-    let aran = 6
+    let noOfObjects = 6
     let size = (600,600)
     m <- readFile "obs.txt"
-    x <- randomList aran
-    y <- randomList aran
-    v <- randomList aran
-    w <- randomList aran
+    x <- randomList noOfObjects
+    y <- randomList noOfObjects
+    v <- randomList noOfObjects
+    w <- randomList noOfObjects
     let l = lines m
     playIO (InWindow "Best game 4ever" size (0, 0)) -- Or FullScreen
               black            -- Background color

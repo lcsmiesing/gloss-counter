@@ -14,12 +14,13 @@ data GameState = GamePlay {
                  , enemies :: [Enemy]
                  , bullets :: [Bullet]
                  , obstacles :: [Obstacle]
-                 , points :: Int
+                 , points :: Float
                  , isPaused :: Bool
                  , gameBorders :: (Point,Point)
+                 , animations :: [Animation]
                  }
                 | GameOver {
-                  points :: Int
+                  points :: Float
                 }
 data Player = Player {
                 velp :: Vector
@@ -32,6 +33,8 @@ data Asteroid = Asteroid {
                 , size :: Float
                 , lastBounce :: String
                 }
+
+
 data Enemy = Enemy {
               vele :: Vector
             , pose :: Point
@@ -42,6 +45,7 @@ data Bullet = Bullet {
                 velb :: Vector
               , posb :: Point
               , fromEnemy :: Bool
+              , lastBounceB :: String
               }
 
 data Obstacle = Obstacle {
@@ -50,6 +54,12 @@ data Obstacle = Obstacle {
                 , height :: Float
                 , boundingBox :: (Point,Point,Point,Point)
                 }
+
+data Animation = Animation {
+                  position :: Point
+                , time :: Float
+                , typ :: String
+                } deriving (Eq)
 
 data Line = Line Point Point
 
@@ -64,6 +74,7 @@ initialState s x y v w (s1,s2) = GamePlay {
                  , points = 0
                  , isPaused = False
                  , gameBorders = ((-s1/2,s2/2),(-s1/2,s2/2))
+                 , animations = []
                  }
                where
                   obs = map (getObs . readStr) s
