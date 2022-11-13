@@ -38,8 +38,8 @@ runGame gstate@(GamePlay {player = p@(Player pvel pang ppos),
     updateBull bu@(Bullet vel pos f d) = Bullet (fst (updateVecB bu)) (vel .+ pos) f d
     --updates ^^ our bullets in velocity, position and LastBounce
     playerDisFromEnemies = map (dis ppos . pose) em
-    updatePoints | any (<1) playerDisFromEnemies = e - 5
-                 | otherwise = e
+    updatePoints | any (<1) playerDisFromEnemies = points - 0.5
+                 | otherwise = points + 0.005
     updatePlayer (Player v a p) = Player (newVel v) a (edgeDetectionP gstate(newVel v .+ p))
     newVel v | magV v > 10 = 10 .* (norm v)
              | otherwise   = v
