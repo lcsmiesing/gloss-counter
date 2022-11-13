@@ -3,10 +3,7 @@ module Model where
 import Graphics.Gloss.Data.Vector ( Vector )
 import Graphics.Gloss.Data.Point.Arithmetic ( Point )
 
-nO_SECS_BETWEEN_CYCLES :: Float
-nO_SECS_BETWEEN_CYCLES = 0
-
-
+--Data custom datatypes used in the game
 data GameState = GamePlay {
                    player :: Player
                  , asteroids  :: [Asteroid]
@@ -23,47 +20,45 @@ data GameState = GamePlay {
                   points :: Float
                 }
 data Player = Player {
-                velp :: Vector
-              , angle :: Float
-              , posp :: Point
+                velp :: Vector --velocity vector
+              , angle :: Float --angle
+              , posp :: Point --position of player
+              , lives :: Float --number of lives
               }
 data Asteroid = Asteroid {
-                  vela :: Vector
-                , posa :: Point
-                , size :: Float
+                  vela :: Vector --velocity vector
+                , posa :: Point --position of asteroid
+                , size :: Float --size of the asteroid
                 }
 
 
 data Enemy = Enemy {
-              vele :: Vector
-            , pose :: Point
-            , lastBounceE :: String
+              vele :: Vector--velocity vector
+            , pose :: Point --position of the enemy
             }
 
 data Bullet = Bullet {
-                velb :: Vector
-              , posb :: Point
-              , fromEnemy :: Bool
+                velb :: Vector--velocity vector
+              , posb :: Point -- position of bullet
+              , fromEnemy :: Bool --determines if it shot from an enemy
               }
 
 data Obstacle = Obstacle {
-                  poso :: Point
-                , width :: Float
-                , height :: Float
-                , boundingBox :: (Point,Point,Point,Point)
+                  poso :: Point --centre of obstacle
+                , width :: Float -- width of obstacle
+                , height :: Float -- height of obstacle
                 }
 
 data Animation = Animation {
-                  position :: Point
-                , time :: Float
+                  position :: Point --position of animation
+                , time :: Float --timer for frames of anumation
                 , typ :: String
                 } deriving (Eq)
 
-data Line = Line Point Point
-
+--Initial state of the world  using information from the "obs.txt" file
 initialState :: [String] -> [Float] -> [Float] -> [Float] -> [Float] -> Point -> GameState
 initialState s x y v w (s1,s2) = GamePlay {
-                   player = Player (0,0) 0 (0,0)
+                   player = Player (0,0) 0 (0,0) 150
                  , asteroids = map crAs zipo
                  , elapsedTime = 0
                  , enemies = map crEm zipvw
@@ -80,18 +75,18 @@ initialState s x y v w (s1,s2) = GamePlay {
                   zipvw = zip v w
                   zipo = zip zipxy zipvw
 
+--Make floats out of string
 readStr :: String -> [Float]
 readStr s = map read $ words s
 
+--Creation of asteroids
 crAs :: ((Float,Float),(Float,Float)) -> Asteroid
 crAs ((x,y),(v,w)) = Asteroid (x,y) (300,0) 25
 
+--Creation of enemies
 crEm :: ((Float,Float)) -> Enemy
-crEm (x,y) = Enemy (x,y) (-300,300) ""
+crEm (x,y) = Enemy (x,y) (-300,300)
 
-getBoundingBox :: (Float,Float,Float,Float) -> (Point,Point,Point,Point)
-getBoundingBox (x,y,w,h) =  ((x-w/2,y+h/2),(x+w/2,y+h/2),(x-w/2,y-h/2),(x+w/2,y-h/2))
--- ((-200,-25),(200, -25),(-200,-225),(200,-225))
-
+--Creation of enemies
 getObs :: [Float] -> Obstacle
-getObs (a:b:c:d:_) = Obstacle (a,b) c d (getBoundingBox (a,b,c,d))
+getObs (a:b:c:d:_) = Obstacle (a,b) c d

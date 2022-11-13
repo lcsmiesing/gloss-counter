@@ -6,7 +6,8 @@ import View
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
 
-main :: IO ()
+--Variables  from the "obs.txt" file are imported and read, the data is passed on to the initialState function
+main :: IO () 
 main = do
     let noOfObjects = 6
     let size = (600,600)
@@ -25,7 +26,7 @@ main = do
               step             -- Step function
 
 
-
+--Random data float generation
 randomList :: Int -> IO [Float]
 randomList 0 = return []
 randomList n = do
