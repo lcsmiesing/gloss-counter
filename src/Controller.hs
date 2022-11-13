@@ -22,20 +22,20 @@ runGame gstate@(GamePlay {player = p@(Player pvel pang ppos),
                           enemies = em,
                           elapsedTime = e,
                           points = points,
-                          animations = anims}) = gstate {player = updatePlayer p, bullets = map updateBull b, asteroids = newas, enemies = map updateEnemies em, animations = newanim, points = updatePoints }
+                          animations = anims}) = gstate {player = updatePlayer p, bullets = map updateBull b, asteroids = updateAsteroids, enemies = map updateEnemies em, animations = newAnimations, points = updatePoints }
   where
     
-    get as@(Asteroid vel pos f s) = diff2 (vel,s,pos, "") (map (coll as) ob) --returns direction vector of asteroid, if modified by a "bounce" against an Obstacle. otherwise returns the same direction vector
-    gete em@(Enemy vel pos s) = diff (vel,s) (map (colle em) ob) --returns direction vector of enemy, same as for get asteroid
-    getb b@(Bullet vel pos d s) =  diff (vel,s) (map (collb b) ob) --returns directions vector of bullet, same as for asteroid
-    updates = map get a --for every asteroid, gets their (potentially updated) direction vector, their lastbounce, their position and lastly a value that tells us if the asteroid hit an obstacle
-    newanim = map (\(Animation x y z) -> (Animation x (y-1) z)) (anims ++ (map (\(x,y) -> Animation x 360 "") [dm | dm@(z,zz) <- map (\(x,y,z,zz) -> (z,zz)) updates, zz == "hit"]))
+    updateVecA as@(Asteroid vel pos f s) = diff2 (vel,s,pos, "") (map (coll as) ob) --returns direction vector of asteroid, if modified by a "bounce" against an Obstacle. otherwise returns the same direction vector
+    updateVecE em@(Enemy vel pos s) = diff (vel,s) (map (colle em) ob) --returns direction vector of enemy, same as for get asteroid
+    updateVecB b@(Bullet vel pos d s) =  diff (vel,s) (map (collb b) ob) --returns directions vector of bullet, same as for asteroid
+    updates = map updateVecA a --for every asteroid, gets their (potentially updated) direction vector, their lastbounce, their position and lastly a value that tells us if the asteroid hit an obstacle
+    newAnimations = map (\(Animation x y z) -> (Animation x (y-1) z)) (anims ++ (map (\(x,y) -> Animation x 360 "") [dm | dm@(z,zz) <- map (\(x,y,z,zz) -> (z,zz)) updates, zz == "hit"]))
     --gets ^^ turns updates that are a hit (i.e. they collided with an Obstacle) into animations, and adds these animations to the animation list, part of gamestate
-    newas = map (\((x,y,z,zz),(Asteroid vel pos f s)) -> Asteroid x (isHit (edgeDetection gstate (vel .+ pos)) f b) f y) (zip updates a)
+    updateAsteroids = map (\((x,y,z,zz),(Asteroid vel pos f s)) -> Asteroid x (isHit (edgeDetection gstate (vel .+ pos)) f b) f y) (zip updates a)
     --updates ^^ our asteroids in velocity, position and LastBounce
-    updateEnemies em@(Enemy vel pos s) = Enemy (rot ppos pos (fst (gete em))) (edgeDetection gstate(vel .+ pos)) (snd(gete em))
+    updateEnemies em@(Enemy vel pos s) = Enemy (rot ppos pos (fst (updateVecE em))) (edgeDetection gstate(vel .+ pos)) (snd(updateVecE em))
     --updates ^^ our enemies in velocity, position and LastBounce
-    updateBull bu@(Bullet vel pos f d) = Bullet (fst (getb bu)) (vel .+ pos) f d
+    updateBull bu@(Bullet vel pos f d) = Bullet (fst (updateVecB bu)) (vel .+ pos) f d
     --updates ^^ our bullets in velocity, position and LastBounce
     playerDisFromEnemies = map (dis ppos . pose) em
     updatePoints | any (<1) playerDisFromEnemies = e - 1
@@ -84,10 +84,10 @@ edgeDetectionP GamePlay {gameBorders = ((a,b),(c,d)), obstacles = ob} p@(x,y)
                               | otherwise = (x,y)
                               where
                                 (Obstacle _ _ _ (o1@(x1,y1),o2@(x2,y2),o3@(x3,y3),o4@(x4,y4))) = closestObstacle p ob
-                                top = distance o1 o2 p 
-                                left = distance o1 o3 p 
-                                right = distance o2 o4 p
-                                bottom = distance o3 o4 p
+                                top = distancePointToLine o1 o2 p 
+                                left = distancePointToLine o1 o3 p 
+                                right = distancePointToLine o2 o4 p
+                                bottom = distancePointToLine o3 o4 p
                                 predicate (x,y) = (x > x1 && x < x2 && y > y3 && y < y1)
                                 
                                 
@@ -112,10 +112,10 @@ coll (Asteroid v p@(x,y) _ f) (Obstacle _ _ _ (a,b,c,d))
                                                        | bottom && f/="bottom"= (v .- ((2*dotproduct v (0,-1)).*(0,-1)),"bottom",p,"")
                                                        | otherwise = (v,f,p,"")
   where
-    top = distance a b p -- (0,1)
-    left = distance a c p --(-1,0)
-    right = distance b d p --(1,0)
-    bottom = distance c d p --(0,-1)
+    top = distancePointToLine a b p -- (0,1)
+    left = distancePointToLine a c p --(-1,0)
+    right = distancePointToLine b d p --(1,0)
+    bottom = distancePointToLine c d p --(0,-1)
 
 --same as coll but for enemies  
 colle :: Enemy -> Obstacle -> (Vector,String)
@@ -125,10 +125,10 @@ colle (Enemy v p f) (Obstacle _ _ _ (a,b,c,d)) | top && f /= "top" = (v .- ((2*d
                                                        | bottom && f/="bottom" = (v .- ((2*dotproduct v (0,-1)).*(0,-1)),"bottom")
                                                        | otherwise = (v,f)
   where
-    top = distance a b p -- (0,1)
-    left = distance a c p --(-1,0)
-    right = distance b d p --(1,0)
-    bottom = distance c d p --(0,-1)
+    top = distancePointToLine a b p -- (0,1)
+    left = distancePointToLine a c p --(-1,0)
+    right = distancePointToLine b d p --(1,0)
+    bottom = distancePointToLine c d p --(0,-1)
 
 collb :: Bullet -> Obstacle -> (Vector,String)
 collb (Bullet v p t f) (Obstacle _ _ _ (a,b,c,d)) | top && f /= "top" = (v .- ((2*dotproduct v (0,1)).*(0,1)),"top")
@@ -137,10 +137,10 @@ collb (Bullet v p t f) (Obstacle _ _ _ (a,b,c,d)) | top && f /= "top" = (v .- ((
                                                        | bottom && f/="bottom" = (v .- ((2*dotproduct v (0,-1)).*(0,-1)),"bottom")
                                                        | otherwise = (v,f)
   where
-    top = distance a b p -- (0,1)
-    left = distance a c p --(-1,0)
-    right = distance b d p --(1,0)
-    bottom = distance c d p --(0,-1)
+    top = distancePointToLine a b p -- (0,1)
+    left = distancePointToLine a c p --(-1,0)
+    right = distancePointToLine b d p --(1,0)
+    bottom = distancePointToLine c d p --(0,-1)
 --                                      direction vector    lastbounce
 --                                               |           |
 --                                               |           |
@@ -160,7 +160,7 @@ isHit p s b | mini < s = (-300,300)
             | otherwise = p
   where
     bulletMap = [pos | Bullet _ pos _ _ <- b]
-    m = map (disc s p) bulletMap
+    m = map (distancePointToCircle s p) bulletMap
     mini = minimum' m
 
 minimum' :: [Float] -> Float
@@ -224,11 +224,11 @@ rot p1 p2 vec = res
       dirv = norm (p1 .- p2)
       res = norm (vec .+ (0.05 .* dirv))
 
-disc :: Float -> Point -> Point -> Float
-disc size c p = abs(size - (dis c p))
+distancePointToCircle :: Float -> Point -> Point -> Float
+distancePointToCircle size c p = abs(size - (dis c p))
 
-distance :: (Float,Float) -> (Float,Float) -> (Float,Float) -> Bool
-distance a b c = dis a c + dis c b > dis a b - 0.5  && dis a c + dis c b < dis a b + 0.5 
+distancePointToLine :: (Float,Float) -> (Float,Float) -> (Float,Float) -> Bool
+distancePointToLine a b c = dis a c + dis c b > dis a b - 0.5  && dis a c + dis c b < dis a b + 0.5 
 
 dis :: Point -> Point -> Float
 dis (x1 , y1) (x2 , y2) = sqrt (x'*x' + y'*y')
