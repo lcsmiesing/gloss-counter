@@ -38,7 +38,7 @@ runGame gstate@(GamePlay {player = p@(Player pvel pang ppos),
     updateBull bu@(Bullet vel pos f d) = Bullet (fst (updateVecB bu)) (vel .+ pos) f d
     --updates ^^ our bullets in velocity, position and LastBounce
     playerDisFromEnemies = map (dis ppos . pose) em
-    updatePoints | any (<1) playerDisFromEnemies = e - 1
+    updatePoints | any (<1) playerDisFromEnemies = e - 5
                  | otherwise = e
     updatePlayer (Player v a p) = Player (newVel v) a (edgeDetectionP gstate(newVel v .+ p))
     newVel v | magV v > 10 = 10 .* (norm v)
@@ -178,10 +178,10 @@ inputKey (EventKey (Char 'p') Down _ _) gstate@(GamePlay {isPaused})
 
 inputKey (EventKey (Char c) Down _ _) gstate@(GamePlay {player = Player vel ang pos})
   = let direction = case c of 
-                      'w' -> (0, 5)
-                      'a' -> (-5, 0)
-                      's' -> (0, -5)
-                      'd' -> (5, 0)
+                      'w' -> (0, 1)
+                      'a' -> (-1, 0)
+                      's' -> (0, -1)
+                      'd' -> (1, 0)
                       _   -> (0, 0)
     in
       gstate {player = Player ((vel .+ direction)) ang pos}
