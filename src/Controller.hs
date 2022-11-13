@@ -10,6 +10,8 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import System.Random
 import Graphics.Gloss.Data.Vector
+import Data.List
+import Data.Maybe
 
 
 
@@ -34,7 +36,7 @@ runGame gstate@(GamePlay {player = p@(Player pvel pang ppos),
     --updates ^^ our enemies in velocity, position and LastBounce
     updateBull bu@(Bullet vel pos f d) = Bullet (fst (getb bu)) (vel .+ pos) f d
     --updates ^^ our bullets in velocity, position and LastBounce
-    updatePlayer (Player v a p) = Player (newVel v) a (edgeDetection gstate(newVel v .+ p))
+    updatePlayer (Player v a p) = Player (newVel v) a (edgeDetectionP gstate(newVel v .+ p))
     newVel v | magV v > 10 = 10 .* (norm v)
              | otherwise   = v
 
@@ -60,6 +62,40 @@ edgeDetection GamePlay {gameBorders = ((a,b),(c,d)), obstacles = ob} (x,y)
                               | y >= d+20 = (x, -y)
                               | otherwise = (x,y)
 edgeDetection GameOver {points} p = p
+
+edgeDetectionP :: GameState -> Point -> Point
+edgeDetectionP GamePlay {gameBorders = ((a,b),(c,d)), obstacles = ob} p@(x,y) 
+                              | x <= a-20 = (abs x, y)
+                              | x >= b+20 = (-x, y)
+                              | y <= c-20 = (x, abs y)
+                              | y >= d+20 = (x, -y)
+                              | top && predicate p = (x,y1+10)
+                              | left && predicate p = (x1-10, y)
+                              | right && predicate p = (x2+10, y)
+                              | bottom && predicate p = (x,y2-10)
+                              | top = (x,y+10)
+                              | left = (x-10, y)
+                              | right = (x+10, y)
+                              | bottom = (x,y-10)
+                              | otherwise = (x,y)
+                              where
+                                (Obstacle _ _ _ (o1@(x1,y1),o2@(x2,y2),o3@(x3,y3),o4@(x4,y4))) = closestObstacle p ob
+                                top = distance o1 o2 p 
+                                left = distance o1 o3 p 
+                                right = distance o2 o4 p
+                                bottom = distance o3 o4 p
+                                minmax = (x1, x2, y1, y4)
+                                predicate (x,y) = (x > x1 && x < x2 && y > y3 && y < y1)
+                                
+                                
+edgeDetectionP GameOver {points} p = p
+
+closestObstacle :: Point -> [Obstacle] -> Obstacle
+closestObstacle p ob = ob!!(fromMaybe 0 min)
+  where
+    minlist = map (dis p . poso) ob
+    min = elemIndex (minimum' minlist) minlist
+
 
 
 --this function checks if an asteroid collides with a side of an obstacle
