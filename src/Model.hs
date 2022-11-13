@@ -14,13 +14,13 @@ data GameState = GamePlay {
                  , enemies :: [Enemy]
                  , bullets :: [Bullet]
                  , obstacles :: [Obstacle]
-                 , points :: Int
+                 , points :: Float
                  , isPaused :: Bool
                  , gameBorders :: (Point,Point)
                  , animations :: [Animation]
                  }
                 | GameOver {
-                  points :: Int
+                  points :: Float
                 }
 data Player = Player {
                 velp :: Vector

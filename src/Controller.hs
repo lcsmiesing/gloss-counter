@@ -21,7 +21,8 @@ runGame gstate@(GamePlay {player = p@(Player pvel pang ppos),
                           obstacles = ob,
                           enemies = em,
                           elapsedTime = e,
-                          animations = anims}) = gstate {player = updatePlayer p, bullets = map updateBull b, asteroids = newas, enemies = map updateEnemies em, animations = newanim}
+                          points = points,
+                          animations = anims}) = gstate {player = updatePlayer p, bullets = map updateBull b, asteroids = newas, enemies = map updateEnemies em, animations = newanim, points = updatePoints }
   where
     
     get as@(Asteroid vel pos f s) = diff2 (vel,s,pos, "") (map (coll as) ob) --returns direction vector of asteroid, if modified by a "bounce" against an Obstacle. otherwise returns the same direction vector
@@ -36,6 +37,9 @@ runGame gstate@(GamePlay {player = p@(Player pvel pang ppos),
     --updates ^^ our enemies in velocity, position and LastBounce
     updateBull bu@(Bullet vel pos f d) = Bullet (fst (getb bu)) (vel .+ pos) f d
     --updates ^^ our bullets in velocity, position and LastBounce
+    playerDisFromEnemies = map (dis ppos . pose) em
+    updatePoints | any (<1) playerDisFromEnemies = e - 1
+                 | otherwise = e
     updatePlayer (Player v a p) = Player (newVel v) a (edgeDetectionP gstate(newVel v .+ p))
     newVel v | magV v > 10 = 10 .* (norm v)
              | otherwise   = v
@@ -84,7 +88,6 @@ edgeDetectionP GamePlay {gameBorders = ((a,b),(c,d)), obstacles = ob} p@(x,y)
                                 left = distance o1 o3 p 
                                 right = distance o2 o4 p
                                 bottom = distance o3 o4 p
-                                minmax = (x1, x2, y1, y4)
                                 predicate (x,y) = (x > x1 && x < x2 && y > y3 && y < y1)
                                 
                                 
