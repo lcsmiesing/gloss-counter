@@ -43,11 +43,11 @@ runGame gstate@(GamePlay {player = p@(Player _ _ ppos lives),
     playerDisFromEnemies = map (dis ppos . pose) em --Distance from enemies
     updatePoints | any (<2) playerDisFromEnemies = points - 0.5 --If a player is near the purple enemies, the score decreases
                  | otherwise = points + 0.005 --If not, the score increases with time
-    updatePlayer speler@(Player vel ang pos liv) = Player (collplay speler *.* vel) ang (edgeDetection gstate (newVel vel .+ pos)) (setLives liv)
+    updatePlayer speler@(Player vel ang pos liv) = Player (newVel (collplay pos *.* vel)) ang (edgeDetection gstate ((collplay pos *.* vel) .+ pos)) (setLives liv)
     setLives lives | playerHit p a = lives - 1 --If the player is hit by an asteroid its lives decreases
                    | otherwise     = lives
-    collplay (Player _ _ p _) = foldr ((*.*) . collision p 15) (1, 1) ob --detect if a player has a collision with an
-    newVel v | magV v > 10 = 10 .* norm v
+    collplay p = foldr ((*.*) . collision p 10) (1, 1) ob --detect if a player has a collision with an
+    newVel v | magV v > 10 = 10 .* norm v --Player velocity is limited to a certain degree
              | otherwise   = v
 -- | Handle one iteration of the game, if paused nothing happens except for angle movement of the player
 step :: Float -> GameState -> IO GameState
@@ -139,7 +139,7 @@ inputKey (EventKey (MouseButton LeftButton) Down _ clickPos)
     | otherwise = gstate {bullets = bullets ++ [newBullet]}
     where
       newBullet = Bullet bulletVel posp False
-      bulletVel =  10 .* norm (clickPos .- posp)
+      bulletVel =  8 .* norm (clickPos .- posp)
 
 --When the mouse moves, point the player in the direction of the mouse by changing the angle
 inputKey (EventMotion (x,y)) gstate@(GamePlay {player = (Player velp angle posp@(a,b) liv)}) 
